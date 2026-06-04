@@ -1,1 +1,50 @@
+version: "3.9"
 
+services:
+
+  memgraph:
+    image: memgraph/memgraph:latest
+    container_name: memgraph
+    restart: unless-stopped
+
+    ports:
+      - "7687:7687"
+      - "3000:3000"
+
+    volumes:
+      - ./data/memgraph:/var/lib/memgraph
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.streamlit
+
+    container_name: insurance_dashboard
+
+    restart: unless-stopped
+
+    ports:
+      - "8501:8501"
+
+    volumes:
+      - .:/app
+
+    depends_on:
+      - memgraph
+
+  simulation-runtime:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.python
+
+    container_name: simulation_runtime
+
+    volumes:
+      - .:/app
+
+    working_dir: /app
+
+    stdin_open: true
+    tty: true
+    depends_on:
+      - memgraph
